@@ -7,7 +7,7 @@
 
 ## Phase 0: Foundation, Security, Design Tokens & CI/CD
 **Goal:** วางโครงสร้าง Repo, ระบบ Better Auth ที่ล็อกคนเดียว, Design System (Dark/Light + TH/EN), iOS PWA Shell และ CI/CD Pipeline
-- [ ] Init Next.js (App Router, Strict TS, Tailwind) + Drizzle ORM + Neon PostgreSQL (ไม่เขียนทับ `docs/`, `AGENT.md`, `.github/`, `public/`)
+- [ ] Init Next.js (App Router, Strict TS, Tailwind) + Drizzle ORM + Neon PostgreSQL (ไม่เขียนทับ `docs/`, `AGENTS.md`, `.github/`, `public/`)
 - [ ] สร้าง Database Schema ทั้งหมดตาม `docs/ARCHITECTURE.md` + ตาราง Better Auth และรัน Initial Migration
 - [ ] ตั้งค่า **Better Auth (`better-auth`)** + `drizzleAdapter` + Google OAuth + `databaseHooks` ล็อก `ALLOWED_USER_EMAIL` + Middleware Protection
 - [ ] ตั้งค่า Design Tokens (`docs/DESIGN.md`), ฟอนต์ `Inter` + `Anuphan`, `next-themes` (Dark/Light/System) และ `next-intl` (`messages/th.json`, `messages/en.json`)

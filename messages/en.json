@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "maewsave",
+    "subtitle": "Personal finance & smart recurring manager"
+  },
+  "nav": {
+    "primaryNav": "Primary navigation",
+    "ledger": "Ledger",
+    "bills": "Bills",
+    "quickAdd": "Quick Add",
+    "settings": "Settings",
+    "quickAddComingSoon": "Quick Add opens in Phase 1"
+  },
+  "auth": {
+    "signInTitle": "Sign in to maewsave",
+    "signInDescription": "Private single-user personal ledger with zero-file storage protection.",
+    "continueWithGoogle": "Continue with Google",
+    "signingIn": "Signing in...",
+    "signOut": "Sign out",
+    "signingOut": "Signing out...",
+    "unauthorizedError": "This email address is not authorized to access this workspace.",
+    "genericError": "Unable to sign in right now. Please try again."
+  },
+  "ledger": {
+    "pageTitle": "Ledger",
+    "summaryLabel": "This month spending",
+    "emptyTitle": "Foundation is ready",
+    "emptyDescription": "Phase 0 security, theme, and PWA shell are active. Manual ledger and virtual wallets unlock in Phase 1.",
+    "goToSettings": "Open Settings"
+  },
+  "bills": {
+    "pageTitle": "Recurring Bills",
+    "emptyTitle": "No recurring bills yet",
+    "emptyDescription": "Monthly and yearly billing rules with iOS push reminders unlock in Phase 2.",
+    "goToLedger": "Back to Ledger"
+  },
+  "settings": {
+    "pageTitle": "Settings",
+    "appearanceSection": "Appearance",
+    "themeLabel": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "languageLabel": "Language",
+    "languageTh": "ไทย (TH)",
+    "languageEn": "English (EN)",
+    "accountSection": "Owner Account",
+    "signedInAs": "Signed in as",
+    "singleUserBadge": "Single-user whitelist active"
+  },
+  "common": {
+    "loading": "Loading...",
+    "errorTitle": "Something went wrong",
+    "errorDescription": "We could not load this view right now.",
+    "retry": "Retry"
+  }
+}

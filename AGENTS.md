@@ -42,3 +42,13 @@ For every task or feature request:
 * **File Validation:** Validate MIME type, file size (strictly under Vercel's 4.5MB limit), and **Magic Bytes** before processing any upload.
 * **AI Prompt Injection Defense:** Wrap extracted text/files as untrusted data inside clear delimiters and enforce strict Zod JSON schema output.
 * **Public Repo Hygiene (Zero PII & Zero Secrets):** NEVER hardcode API keys, DB URLs, personal emails, real names, real bank/insurance brand details, or production URLs anywhere in code, docs, tests, or seed files. Use `process.env` validated at startup.
+
+## 5. Autonomous Self-Verification & PR Workflow
+For every task or phase from **Phase 1 onward**:
+* **Feature Branch Discipline:** NEVER commit directly to `main`. Create a descriptive feature branch (e.g., `feat/phase-1-ledger`) for all work.
+* **Mandatory `pre-pr-gate` Skill:** Before finalizing any phase or opening a pull request, you MUST run `.agents/skills/pre-pr-gate/SKILL.md`:
+  1. Run mechanical checks (`npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`).
+  2. Spawn `qa-reviewer` (`.agents/agents/qa-reviewer.md`) and `security-auditor` (`.agents/agents/security-auditor.md`) in parallel against the git diff.
+  3. Automatically fix every `CRITICAL`, `HIGH`, and `MEDIUM` finding and re-verify (maximum 3 retry loops; escalate to the user if still blocked after 3 iterations).
+  4. Verify `git status` is clean of `.env*`, `.pdf`, `.csv`, keys, or temp files.
+* **Human Review Gate:** Only open a Pull Request for final human review once all mechanical checks, `qa-reviewer`, and `security-auditor` pass cleanly.

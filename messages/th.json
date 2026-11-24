@@ -1,0 +1,57 @@
+{
+  "brand": {
+    "name": "แมวอ้วนเฮง",
+    "subtitle": "บัญชีส่วนตัวและเตือนบิลอัจฉริยะ"
+  },
+  "nav": {
+    "primaryNav": "เมนูหลัก",
+    "ledger": "บัญชี",
+    "bills": "เตือนบิล",
+    "quickAdd": "จดด่วน",
+    "settings": "ตั้งค่า",
+    "quickAddComingSoon": "ฟีเจอร์จดด่วนกำลังจะพร้อมใช้งานใน Phase 1"
+  },
+  "auth": {
+    "signInTitle": "เข้าสู่ระบบแมวอ้วนเฮง",
+    "signInDescription": "บัญชีส่วนตัวแบบล็อกสิทธิ์เจ้าของคนเดียว ปลอดภัยและไม่เก็บไฟล์สลิป",
+    "continueWithGoogle": "เข้าสู่ระบบด้วย Google",
+    "signingIn": "กำลังเข้าสู่ระบบ...",
+    "signOut": "ออกจากระบบ",
+    "signingOut": "กำลังออกจากระบบ...",
+    "unauthorizedError": "อีเมลนี้ไม่ได้รับอนุญาตให้เข้าถึงบัญชีนี้",
+    "genericError": "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง"
+  },
+  "ledger": {
+    "pageTitle": "บัญชีรายรับ-รายจ่าย",
+    "summaryLabel": "ยอดรายจ่ายเดือนนี้",
+    "emptyTitle": "พร้อมเริ่มต้นจดบัญชีแล้ว",
+    "emptyDescription": "โครงสร้างระบบและความปลอดภัย Phase 0 พร้อมใช้งาน หน้าจดรายการและกระเป๋าเงินจะเปิดให้ใช้ใน Phase 1",
+    "goToSettings": "ไปที่ตั้งค่า"
+  },
+  "bills": {
+    "pageTitle": "เตือนบิลประจำ",
+    "emptyTitle": "ยังไม่มีรายการบิลประจำ",
+    "emptyDescription": "ระบบจัดการบิลรายเดือน รายปี และแจ้งเตือนบน iPhone จะเปิดให้ใช้ใน Phase 2",
+    "goToLedger": "กลับหน้าบัญชี"
+  },
+  "settings": {
+    "pageTitle": "ตั้งค่า",
+    "appearanceSection": "การแสดงผล",
+    "themeLabel": "ธีมสี",
+    "themeSystem": "ตามระบบ",
+    "themeLight": "สว่าง",
+    "themeDark": "มืด",
+    "languageLabel": "ภาษา",
+    "languageTh": "ไทย (TH)",
+    "languageEn": "English (EN)",
+    "accountSection": "บัญชีเจ้าของ",
+    "signedInAs": "เข้าสู่ระบบด้วย",
+    "singleUserBadge": "ล็อกสิทธิ์เจ้าของคนเดียว"
+  },
+  "common": {
+    "loading": "กำลังโหลด...",
+    "errorTitle": "เกิดข้อผิดพลาด",
+    "errorDescription": "ไม่สามารถโหลดข้อมูลได้ในขณะนี้",
+    "retry": "ลองใหม่"
+  }
+}
