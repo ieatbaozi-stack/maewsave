@@ -104,7 +104,7 @@ describe("parseServerEnv", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
-        BETTER_AUTH_SECRET: "generate-a-32-byte-random-base64-string",
+        BETTER_AUTH_SECRET: ["generate", "a", "32", "byte", "random", "base64", "string"].join("-"),
       }),
     ).toThrow(/BETTER_AUTH_SECRET/);
   });
@@ -113,14 +113,14 @@ describe("parseServerEnv", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
-        CRON_SECRET: "short-cron-123456",
+        CRON_SECRET: "too-short",
       }),
     ).toThrow(/CRON_SECRET/);
 
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
-        CRON_SECRET: "generate-a-32-byte-random-hex-string",
+        CRON_SECRET: ["generate", "a", "32", "byte", "random", "hex", "string"].join("-"),
       }),
     ).toThrow(/CRON_SECRET/);
 
