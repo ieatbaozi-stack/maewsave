@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="maewsave app icon">
+  <defs>
+    <clipPath id="cat-body-clip">
+      <path d="M 192 152 Q 256 134 320 152 Q 358 96 382 108 Q 402 118 390 194 C 436 244 434 352 372 396 C 326 426 186 426 140 396 C 78 352 76 244 122 194 Q 110 118 130 108 Q 154 96 192 152 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- Deep Emerald Jade background (safe for iOS squircle mask) -->
+  <rect width="512" height="512" fill="#0F5C4D" />
+
+  <!-- Plump cat silhouette (warm cream) -->
+  <path
+    d="M 192 152 Q 256 134 320 152 Q 358 96 382 108 Q 402 118 390 194 C 436 244 434 352 372 396 C 326 426 186 426 140 396 C 78 352 76 244 122 194 Q 110 118 130 108 Q 154 96 192 152 Z"
+    fill="#FFFDF7"
+  />
+
+  <!-- Auspicious red collar clipped inside cat body -->
+  <g clip-path="url(#cat-body-clip)">
+    <path
+      d="M 110 332 Q 256 378 402 332"
+      fill="none"
+      stroke="#E11D48"
+      stroke-width="24"
+      stroke-linecap="round"
+    />
+  </g>
+
+  <!-- Outer stroke -->
+  <path
+    d="M 192 152 Q 256 134 320 152 Q 358 96 382 108 Q 402 118 390 194 C 436 244 434 352 372 396 C 326 426 186 426 140 396 C 78 352 76 244 122 194 Q 110 118 130 108 Q 154 96 192 152 Z"
+    fill="none"
+    stroke="#18181B"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Rosy cheeks -->
+  <ellipse cx="152" cy="276" rx="22" ry="12" fill="#FDA4AF" opacity="0.55" />
+  <ellipse cx="360" cy="276" rx="22" ry="12" fill="#FDA4AF" opacity="0.55" />
+
+  <!-- Wide-set round eyes -->
+  <circle cx="188" cy="248" r="14" fill="#18181B" />
+  <circle cx="324" cy="248" r="14" fill="#18181B" />
+
+  <!-- Nose and :3 mouth -->
+  <ellipse cx="256" cy="264" rx="9" ry="6" fill="#18181B" />
+  <path
+    d="M 230 278 Q 243 294 256 280 Q 269 294 282 278"
+    fill="none"
+    stroke="#18181B"
+    stroke-width="11"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Lucky gold coin -->
+  <circle
+    cx="256"
+    cy="364"
+    r="34"
+    fill="#FBBF24"
+    stroke="#18181B"
+    stroke-width="12"
+  />
+  <rect x="245" y="353" width="22" height="22" rx="4" fill="#18181B" />
+</svg>
