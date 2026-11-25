@@ -18,6 +18,12 @@ describe("Next.js request proxy", () => {
     expect(response.headers.get("Content-Security-Policy")).toContain("'strict-dynamic'");
   });
 
+  it("returns 404 (not 401/302) for unauthenticated /api/admin/* probes", () => {
+    const response = proxy(new NextRequest("https://app.example.test/api/admin/invites"));
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Cache-Control")).toBe("no-store, private");
+  });
+
   it("does not bypass auth for prefix-spoofed /api/auth-admin or /icon-evil paths", () => {
     const apiSpoof = proxy(new NextRequest("https://app.example.test/api/auth-admin"));
     expect(apiSpoof.status).toBe(401);
@@ -35,11 +41,13 @@ describe("Next.js request proxy", () => {
     expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
   });
 
-  it("allows public routes (/sign-in, /auth/complete, /api/auth/*, exact PWA assets)", () => {
+  it("allows public auth, invite check, cron, and exact PWA asset routes", () => {
     const publicUrls = [
       "https://app.example.test/sign-in",
-      "https://app.example.test/auth/complete",
       "https://app.example.test/api/auth/callback/google",
+      "https://app.example.test/api/auth/otp/request",
+      "https://app.example.test/api/invite/check",
+      "https://app.example.test/api/cron/cleanup-auth",
       "https://app.example.test/manifest.json",
       "https://app.example.test/apple-touch-icon.png",
     ];

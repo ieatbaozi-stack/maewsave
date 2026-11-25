@@ -12,6 +12,7 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth-schema";
 
 export const WALLET_TYPES = ["BANK_CASH", "CREDIT_CARD", "EWALLET"] as const;
 export type WalletType = (typeof WALLET_TYPES)[number];
@@ -37,11 +38,14 @@ export type RecurringFrequency = (typeof RECURRING_FREQUENCIES)[number];
 export const RECURRING_ACTION_TYPES = ["AUTO_CHARGE", "MANUAL_PAY"] as const;
 export type RecurringActionType = (typeof RECURRING_ACTION_TYPES)[number];
 
-// 1. Virtual Wallets (Zero PII)
+// 1. Virtual Wallets (Zero PII, tenant-isolated by user_id)
 export const wallets = pgTable(
   "wallets",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     alias: varchar("alias", { length: 50 }).notNull(),
     type: varchar("type", { length: 20 }).$type<WalletType>().notNull(),
     statementDay: smallint("statement_day"),
@@ -61,23 +65,34 @@ export const wallets = pgTable(
       "wallets_due_day_range",
       sql`${table.dueDay} IS NULL OR (${table.dueDay} >= 1 AND ${table.dueDay} <= 31)`,
     ),
+    index("wallets_user_id_idx").on(table.userId),
   ],
 );
 
-// 2. Categories
-export const categories = pgTable("categories", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  name: varchar("name", { length: 50 }).notNull(),
-  type: varchar("type", { length: 10 }).$type<CategoryType>().notNull(),
-  icon: varchar("icon", { length: 30 }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+// 2. Categories (tenant-isolated by user_id)
+export const categories = pgTable(
+  "categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 50 }).notNull(),
+    type: varchar("type", { length: 10 }).$type<CategoryType>().notNull(),
+    icon: varchar("icon", { length: 30 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("categories_user_id_idx").on(table.userId)],
+);
 
-// 3. Smart Recurring Rules
+// 3. Smart Recurring Rules (tenant-isolated by user_id)
 export const recurringRules = pgTable(
   "recurring_rules",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     title: varchar("title", { length: 100 }).notNull(),
     amountSatang: bigint("amount_satang", { mode: "number" }).notNull(),
     walletId: uuid("wallet_id")
@@ -106,14 +121,18 @@ export const recurringRules = pgTable(
       sql`${table.billingMonth} IS NULL OR (${table.billingMonth} >= 1 AND ${table.billingMonth} <= 12)`,
     ),
     index("recurring_rules_active_next_run_idx").on(table.isActive, table.nextRunDate),
+    index("recurring_rules_user_active_idx").on(table.userId, table.isActive),
   ],
 );
 
-// 4. Transactions (Ledger)
+// 4. Transactions (Ledger, tenant-isolated by user_id)
 export const transactions = pgTable(
   "transactions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
     type: varchar("type", { length: 15 }).$type<TransactionType>().notNull(),
     amountSatang: bigint("amount_satang", { mode: "number" }).notNull(),
     walletId: uuid("wallet_id")
@@ -139,17 +158,25 @@ export const transactions = pgTable(
     check("transactions_amount_positive", sql`${table.amountSatang} > 0`),
     index("transactions_date_idx").on(table.transactionDate),
     index("transactions_wallet_date_idx").on(table.walletId, table.transactionDate),
+    index("transactions_user_date_idx").on(table.userId, table.transactionDate),
   ],
 );
 
-// 5. Web Push Subscriptions (iOS PWA)
-export const pushSubscriptions = pgTable("push_subscriptions", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  endpoint: text("endpoint").notNull().unique(),
-  p256dh: text("p256dh").notNull(),
-  auth: text("auth").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+// 5. Web Push Subscriptions (iOS PWA, tenant-isolated by user_id)
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("push_subscriptions_user_id_idx").on(table.userId)],
+);
 
 export type Wallet = typeof wallets.$inferSelect;
 export type NewWallet = typeof wallets.$inferInsert;

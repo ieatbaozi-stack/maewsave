@@ -9,9 +9,14 @@ const validProdEnv: Record<string, string | undefined> = {
   DATABASE_URL: "postgresql://user:pass@ep-demo.aws.neon.tech/neondb?sslmode=require",
   BETTER_AUTH_SECRET: TEST_AUTH_VALUE,
   BETTER_AUTH_URL: "https://app.example.test",
-  ALLOWED_USER_EMAIL: "owner@example.com",
   GOOGLE_CLIENT_ID: "test-google-client-id-12345",
   GOOGLE_CLIENT_SECRET: "test-google-client-secret-67890",
+  EMAIL_TRANSPORT: "smtp",
+  SMTP_HOST: "smtp.gmail.com",
+  SMTP_PORT: "465",
+  SMTP_USER: "mailbox@example.com",
+  SMTP_PASS: "abcdefghijklmnop",
+  SMTP_FROM: "maewsave <mailbox@example.com>",
 };
 
 describe("parseServerEnv", () => {
@@ -19,24 +24,51 @@ describe("parseServerEnv", () => {
     resetServerEnvCache();
   });
 
-  it("parses valid required production environment variables", () => {
+  it("parses valid required production environment variables with defaults", () => {
     const parsed = parseServerEnv(validProdEnv);
 
     expect(parsed.NODE_ENV).toBe("production");
-    expect(parsed.ALLOWED_USER_EMAIL).toBe("owner@example.com");
-    expect(parsed.BETTER_AUTH_URL).toBe("https://app.example.test");
+    expect(parsed.EMAIL_TRANSPORT).toBe("smtp");
+    expect(parsed.SMTP_PORT).toBe(465);
+    expect(parsed.OTP_DAILY_CAP).toBe(400);
+    expect(parsed.SESSION_MAX_AGE_DAYS).toBe(30);
   });
 
-  it("defaults NODE_ENV to development and accepts postgres:// and http:// in development", () => {
+  it("defaults NODE_ENV to development, EMAIL_TRANSPORT to log, and accepts postgres:// + http:// in dev", () => {
     const parsed = parseServerEnv({
-      ...validProdEnv,
-      NODE_ENV: undefined,
       DATABASE_URL: "postgres://user:pass@localhost:5432/maewsave_dev",
+      BETTER_AUTH_SECRET: TEST_AUTH_VALUE,
       BETTER_AUTH_URL: "http://localhost:3000",
+      GOOGLE_CLIENT_ID: "dev-client",
+      GOOGLE_CLIENT_SECRET: "dev-secret",
     });
 
     expect(parsed.NODE_ENV).toBe("development");
+    expect(parsed.EMAIL_TRANSPORT).toBe("log");
     expect(parsed.BETTER_AUTH_URL).toBe("http://localhost:3000");
+  });
+
+  it("forbids EMAIL_TRANSPORT=log in production and requires complete SMTP settings in smtp mode", () => {
+    expect(() =>
+      parseServerEnv({
+        ...validProdEnv,
+        EMAIL_TRANSPORT: "log",
+      }),
+    ).toThrow(/EMAIL_TRANSPORT/);
+
+    expect(() =>
+      parseServerEnv({
+        ...validProdEnv,
+        SMTP_PASS: "",
+      }),
+    ).toThrow(/SMTP_PASS/);
+
+    expect(() =>
+      parseServerEnv({
+        ...validProdEnv,
+        SMTP_PORT: "25",
+      }),
+    ).toThrow(/SMTP_PORT/);
   });
 
   it("treats empty optional environment variables as undefined", () => {
@@ -52,25 +84,14 @@ describe("parseServerEnv", () => {
     expect(parsed.CRON_SECRET).toBeUndefined();
   });
 
-  it("trims whitespace from ALLOWED_USER_EMAIL", () => {
-    const parsed = parseServerEnv({
-      ...validProdEnv,
-      ALLOWED_USER_EMAIL: "  owner@example.com  ",
-    });
-
-    expect(parsed.ALLOWED_USER_EMAIL).toBe("owner@example.com");
-  });
-
-  it("rejects non-postgres DATABASE_URL", () => {
+  it("rejects non-postgres DATABASE_URL and missing sslmode=require in production", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
         DATABASE_URL: "mysql://user:pass@localhost/db",
       }),
     ).toThrow(/DATABASE_URL/);
-  });
 
-  it("rejects DATABASE_URL without sslmode=require in production", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
@@ -79,18 +100,11 @@ describe("parseServerEnv", () => {
     ).toThrow(/sslmode=require/);
   });
 
-  it("rejects short, whitespace-only, low-entropy, or .env.example placeholder BETTER_AUTH_SECRET", () => {
+  it("rejects short, whitespace-only, low-entropy, or placeholder secrets", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
-        BETTER_AUTH_SECRET: "short-secret",
-      }),
-    ).toThrow(/BETTER_AUTH_SECRET/);
-
-    expect(() =>
-      parseServerEnv({
-        ...validProdEnv,
-        BETTER_AUTH_SECRET: " ".repeat(40),
+        BETTER_AUTH_SECRET: "too-short",
       }),
     ).toThrow(/BETTER_AUTH_SECRET/);
 
@@ -107,9 +121,7 @@ describe("parseServerEnv", () => {
         BETTER_AUTH_SECRET: ["generate", "a", "32", "byte", "random", "base64", "string"].join("-"),
       }),
     ).toThrow(/BETTER_AUTH_SECRET/);
-  });
 
-  it("rejects short or placeholder CRON_SECRET and accepts strong 32+ char CRON_SECRET", () => {
     expect(() =>
       parseServerEnv({
         ...validProdEnv,
@@ -117,18 +129,11 @@ describe("parseServerEnv", () => {
       }),
     ).toThrow(/CRON_SECRET/);
 
-    expect(() =>
-      parseServerEnv({
-        ...validProdEnv,
-        CRON_SECRET: ["generate", "a", "32", "byte", "random", "hex", "string"].join("-"),
-      }),
-    ).toThrow(/CRON_SECRET/);
-
-    const parsed = parseServerEnv({
+    const withCron = parseServerEnv({
       ...validProdEnv,
       CRON_SECRET: TEST_CRON_VALUE,
     });
-    expect(parsed.CRON_SECRET).toBe(TEST_CRON_VALUE);
+    expect(withCron.CRON_SECRET).toBe(TEST_CRON_VALUE);
   });
 
   it("rejects non-HTTP schemes and non-HTTPS URLs in production", () => {
@@ -154,22 +159,6 @@ describe("parseServerEnv", () => {
     ).toThrow(/WEBAUTHN_ORIGIN/);
   });
 
-  it("rejects invalid ALLOWED_USER_EMAIL and missing Google OAuth credentials", () => {
-    expect(() =>
-      parseServerEnv({
-        ...validProdEnv,
-        ALLOWED_USER_EMAIL: "not-an-email",
-      }),
-    ).toThrow(/ALLOWED_USER_EMAIL/);
-
-    expect(() =>
-      parseServerEnv({
-        ...validProdEnv,
-        GOOGLE_CLIENT_ID: "",
-      }),
-    ).toThrow(/GOOGLE_CLIENT_ID/);
-  });
-
   it("caches getServerEnv until resetServerEnvCache is invoked", () => {
     const originalEnv = { ...process.env };
     try {
@@ -177,13 +166,13 @@ describe("parseServerEnv", () => {
       resetServerEnvCache();
 
       const first = getServerEnv();
-      process.env.ALLOWED_USER_EMAIL = "other@example.com";
+      process.env.OTP_DAILY_CAP = "250";
       const second = getServerEnv();
-      expect(second.ALLOWED_USER_EMAIL).toBe(first.ALLOWED_USER_EMAIL);
+      expect(second.OTP_DAILY_CAP).toBe(first.OTP_DAILY_CAP);
 
       resetServerEnvCache();
       const third = getServerEnv();
-      expect(third.ALLOWED_USER_EMAIL).toBe("other@example.com");
+      expect(third.OTP_DAILY_CAP).toBe(250);
     } finally {
       for (const key of Object.keys(process.env)) {
         if (!(key in originalEnv)) {

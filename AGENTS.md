@@ -37,7 +37,13 @@ For every task or feature request:
 * **Complete Product States:** Every data-fetching view MUST handle all 4 states: Loading (Skeleton), Empty State (with minimal Fat Cat mark), Error State (with Retry), and Optimistic UI updates.
 
 ## 4. Security, Privacy & Public Repo Guardrails (Zero-Trust)
-* **Single-User Lock (Better Auth):** Enforce session verification + `ALLOWED_USER_EMAIL` whitelist check in `better-auth` `databaseHooks` (DB level), Middleware, AND inside every API Route / Server Action.
+* **Passwordless Invite-Only Auth (Better Auth + Email OTP + Account Linking):**
+  * Support Google OAuth (`openid`, `email`, `profile`, `prompt=select_account`, NEVER store Google OAuth tokens in DB) and 6-digit Email OTP (HMAC-SHA256 hashed in DB, 10-min expiry, max 5 attempts, anti-enumeration pre-gate before sending email).
+  * Enforce invite-only sign-up atomically in `better-auth` `databaseHooks.user.create.before` (single SQL `uses_count = uses_count + 1 WHERE ...`), store only `SHA-256` hash of invite codes, pass invites via `#invite=` hash fragment (never `?invite=`), and clear invite cookie after signup.
+  * Multi-user isolation: EVERY finance table (`wallets`, `categories`, `transactions`, `recurring_rules`, `push_subscriptions`) MUST scope reads/writes to `session.userId`.
+  * Super Admin (`super_admins` table): managed ONLY via SQL Editor (zero API/UI to grant/revoke), verified against DB on every request, and returns `404` for non-Super-Admins.
+  * Serverless DB-backed Rate Limiting (`rate_limits` table) with HTTP `429` + `X-Retry-After` and global `OTP_DAILY_CAP` (`503`).
+  * Email Transport Layer decoupled (`EMAIL_TRANSPORT=smtp|log`); `log` mode MUST be rejected in production and OTP/emails MUST NEVER be logged in production.
 * **Zero-File Storage:** NEVER save uploaded slip images or bank statements to disk, S3, or Vercel Blob. Process in RAM (`Buffer`) and discard immediately.
 * **File Validation:** Validate MIME type, file size (strictly under Vercel's 4.5MB limit), and **Magic Bytes** before processing any upload.
 * **AI Prompt Injection Defense:** Wrap extracted text/files as untrusted data inside clear delimiters and enforce strict Zod JSON schema output.

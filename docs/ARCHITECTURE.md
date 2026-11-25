@@ -6,9 +6,12 @@
 * **Styling & Theme:** Tailwind CSS (Semantic CSS Tokens) + `next-themes` (Dark/Light/System)
 * **i18n:** `next-intl` (Cookie/Preference-driven TH/EN without URL prefixes)
 * **Validation:** Zod (Single Source of Truth สำหรับ API, Forms, และ AI JSON Output)
-* **Authentication:** **Better Auth (`better-auth`)** + `drizzleAdapter`
-  * Google OAuth + `databaseHooks` Whitelist Lock (`ALLOWED_USER_EMAIL`)
-  * Built-in Cookie Caching (ลดจำนวนการปลุก Neon DB)
+* **Authentication:** **Better Auth (`better-auth`)** + `drizzleAdapter` + Passwordless Invite-Only System
+  * **Google OAuth 2.0:** `openid`, `email`, `profile` + `prompt=select_account` (ไม่เก็บ access/refresh token ลง DB)
+  * **Email + 6-digit OTP:** ส่งผ่าน Decoupled Email Transport Layer (`smtp` Gmail App Password / `log` dev-only / ขยาย `http` ได้), เก็บ hash ใน DB, หมดอายุ 10 นาที, ผิดได้ 5 ครั้ง
+  * **Account Linking:** ผูกบัญชีด้วยอีเมลเดียวกัน (Google ↔ Email OTP ใช้ `user.id` เดียวกัน)
+  * **Invite-Only & Super Admin:** โค้ดเชิญ `XXXX-XXXX` เก็บเฉพาะ `SHA-256` hash + ลิงก์ `#invite=` + ตัดสิทธิ์แบบ Atomic ใน `databaseHooks.user.create.before`; สิทธิ์ `super_admins` อัปเดตผ่าน SQL เท่านั้น (`/admin/invites` ตอบ `404` สำหรับคนทั่วไป)
+  * **DB-Backed Sessions & Rate Limiting:** Session cookie `HttpOnly; Secure; SameSite=Lax` (30 วัน, sliding renewal) + Rate limiting ใน PostgreSQL (`rate_limits`) + `OTP_DAILY_CAP`
   * Ready for Official Passkey (WebAuthn / Face ID) Plugin
 * **Database & ORM:** Neon (PostgreSQL Serverless) + Drizzle ORM
 * **Hosting & Cron:** Vercel (Hobby Plan) + Vercel Cron (รันวันละ 1 ครั้ง เวลา 00:00 UTC / 07:00 ICT)
@@ -129,14 +132,16 @@ CREATE TABLE push_subscriptions (
 ## 5. Security Architecture & Pen-Test Plan
 
 ### Defense-in-Depth Controls
-1. **Strict Single-User Auth (Better Auth):**
-   * Google OAuth (Google Consent Screen ตั้งโหมด `Testing` + ใส่ Test user เฉพาะเจ้าของ) + `databaseHooks.user.create.before` ปฏิเสธทุกอีเมลที่ไม่ตรงกับ `ALLOWED_USER_EMAIL`
+1. **Passwordless Invite-Only Auth & Super Admin (Better Auth):**
+   * Google OAuth (`openid`, `email`, `profile`, `prompt=select_account`, strip OAuth tokens before DB write) + Email 6-digit OTP (HMAC-SHA256 hashed, 10-min TTL, max 5 attempts, anti-enumeration pre-gate before sending email)
+   * Atomic invite consumption (`UPDATE invitations SET uses_count = uses_count + 1 WHERE ...`) inside `databaseHooks.user.create.before` — zero uninvited `user` rows
+   * SQL-only `super_admins` table verified against DB on every request (`404` for non-Super-Admins), `Origin` CSRF check, `Cache-Control: no-store`, and `<= 20/day` invite creation rate limit
    * Optional Passkey (Face ID) Plugin สำหรับล็อกอินแบบ Phishing-resistant บน iPhone
-2. **Zero-Trust API:** ตรวจ Session ใน Middleware และทุก Server Action/API Route โดยใช้ Cookie `HttpOnly`, `Secure`, `SameSite=Strict`
+2. **Zero-Trust API & Multi-Tenant Isolation:** ตรวจ DB-backed Session ใน Middleware/Proxy และทุก Server Action/API Route โดยใช้ Cookie `HttpOnly`, `Secure`, `SameSite=Lax` และบังคับ `user_id` scoping ในทุกตารางการเงิน
 3. **App Hardening:**
-   * ตั้งค่า Security Headers: `CSP`, `HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`
+   * ตั้งค่า Security Headers: per-request nonce `CSP`, `HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
    * ตรวจ **Magic Bytes** ของไฟล์อัปโหลดทุกครั้ง (รับเฉพาะ JPEG, PNG, PDF, CSV แท้ๆ)
-   * เปิด **Vercel Firewall** และ Rate Limiting ที่ Endpoint ฝั่ง Auth และ AI
+   * DB-backed Serverless Rate Limiting (`rate_limits`) ตอบ `429` + `X-Retry-After` และ `OTP_DAILY_CAP` ตอบ `503` + เปิด **Vercel Firewall**
 4. **AI Prompt Injection Defense:** ห่อข้อมูลจากสลิป/Statement ใน Delimiter ชัดเจนว่าเป็น Untrusted Data และบังคับ Structured Output ผ่าน Zod Schema
 
 ### Automated CI/CD & Pen-Test Checklist (Public Repo Ready)

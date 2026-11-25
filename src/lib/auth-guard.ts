@@ -1,10 +1,8 @@
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getDb } from "@/db";
 import { getAuth } from "@/lib/auth";
-import { isAllowedEmail } from "@/lib/email-whitelist";
-import { getServerEnv } from "@/lib/env";
-
-export { isAllowedEmail, normalizeEmail } from "@/lib/email-whitelist";
+import { isSuperAdmin } from "@/services/invitations";
 
 export interface AuthorizedSession {
   userId: string;
@@ -33,11 +31,6 @@ export async function getAuthorizedSession(
   }
 
   if (sessionResult.user.emailVerified !== true) {
-    return null;
-  }
-
-  const { ALLOWED_USER_EMAIL } = getServerEnv();
-  if (!isAllowedEmail(sessionResult.user.email, ALLOWED_USER_EMAIL)) {
     return null;
   }
 
@@ -74,4 +67,31 @@ export async function requireAuthorizedSessionOrRedirect(
   }
 
   return authorized;
+}
+
+// Always queries super_admins directly in PostgreSQL (zero client/cookie caching)
+export async function getSuperAdminSession(
+  requestHeaders?: Headers,
+): Promise<AuthorizedSession | null> {
+  try {
+    const authorized = await getAuthorizedSession(requestHeaders);
+    if (!authorized) {
+      return null;
+    }
+
+    const adminAllowed = await isSuperAdmin(getDb(), authorized.userId);
+    return adminAllowed ? authorized : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function requireSuperAdminPageOrNotFound(
+  requestHeaders?: Headers,
+): Promise<AuthorizedSession> {
+  const adminSession = await getSuperAdminSession(requestHeaders);
+  if (!adminSession) {
+    notFound();
+  }
+  return adminSession;
 }

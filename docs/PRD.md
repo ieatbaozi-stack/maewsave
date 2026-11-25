@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 **Project:** maewsave (แมวอ้วนเฮง) — Personal Finance & Smart Recurring Manager  
-**Target User:** Single-user (Personal use, Whitelist-locked)  
+**Target User:** Invite-only Private Multi-User (Passwordless Google OAuth + Email OTP, managed via SQL-only Super Admin Invites)  
 **Platform:** Mobile-First Web App / iOS PWA (95% iPhone Standalone, 5% Desktop Browser)  
 **Languages & Theme:** Bilingual (TH / EN) + Dark / Light / System Theme
 
