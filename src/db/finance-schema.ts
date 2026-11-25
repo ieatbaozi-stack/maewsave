@@ -9,6 +9,7 @@ import {
   smallint,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -82,7 +83,14 @@ export const categories = pgTable(
     icon: varchar("icon", { length: 30 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("categories_user_id_idx").on(table.userId)],
+  (table) => [
+    index("categories_user_id_idx").on(table.userId),
+    uniqueIndex("categories_user_type_name_uidx").on(
+      table.userId,
+      table.type,
+      sql`lower(btrim(${table.name}))`,
+    ),
+  ],
 );
 
 // 3. Smart Recurring Rules (tenant-isolated by user_id)

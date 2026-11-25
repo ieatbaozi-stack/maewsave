@@ -1,21 +1,37 @@
 import { ChevronRight, KeyRound, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { CategoriesManager } from "@/components/settings/categories-manager";
 import { PreferencesControls } from "@/components/settings/preferences-controls";
+import { WalletsManager } from "@/components/settings/wallets-manager";
 import { getDb } from "@/db";
 import { requireAuthorizedSessionOrRedirect } from "@/lib/auth-guard";
+import { listCategories } from "@/services/categories";
 import { isSuperAdmin } from "@/services/invitations";
+import { listWallets } from "@/services/wallets";
 
 export default async function SettingsPage() {
   const session = await requireAuthorizedSessionOrRedirect();
-  const [t, adminAllowed] = await Promise.all([
-    getTranslations("settings"),
-    isSuperAdmin(getDb(), session.userId),
-  ]);
+  const db = getDb();
+
+  const [t, rawLocale, adminAllowed, userWallets, userCategories] =
+    await Promise.all([
+      getTranslations("settings"),
+      getLocale(),
+      isSuperAdmin(db, session.userId),
+      listWallets(db, session.userId, { includeInactive: true }),
+      listCategories(db, session.userId),
+    ]);
+
+  const locale: "th" | "en" = rawLocale === "en" ? "en" : "th";
 
   return (
     <div className="space-y-4">
       <h1 className="text-[22px] font-semibold text-text-primary">{t("pageTitle")}</h1>
+
+      <WalletsManager initialWallets={userWallets} />
+
+      <CategoriesManager initialCategories={userCategories} locale={locale} />
 
       <section className="rounded-2xl border border-border-subtle bg-surface p-4 space-y-3">
         <h2 className="text-[13px] font-semibold uppercase tracking-wider text-text-secondary">

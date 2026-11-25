@@ -2,10 +2,12 @@
 
 import { CalendarClock, Plus, Settings, Wallet } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { MaewsaveMark } from "@/components/brand/maewsave-mark";
+
+export const QUICK_ADD_EVENT = "maewsave:open-quick-add";
 
 interface AppShellProps {
   children: ReactNode;
@@ -13,32 +15,20 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const tBrand = useTranslations("brand");
   const tNav = useTranslations("nav");
-  const [quickAddNotice, setQuickAddNotice] = useState(false);
-  const timerRef = useRef<number | null>(null);
 
   const isLedger = pathname === "/";
   const isBills = pathname.startsWith("/bills");
   const isSettings = pathname.startsWith("/settings");
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
-
   function handleQuickAddClick() {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
+    if (isLedger) {
+      window.dispatchEvent(new CustomEvent(QUICK_ADD_EVENT));
+      return;
     }
-    setQuickAddNotice(true);
-    timerRef.current = window.setTimeout(() => {
-      setQuickAddNotice(false);
-      timerRef.current = null;
-    }, 2600);
+    router.push("/?compose=1");
   }
 
   return (
@@ -70,18 +60,6 @@ export function AppShell({ children }: AppShellProps) {
       <main className="mx-auto w-full max-w-[480px] flex-1 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))]">
         {children}
       </main>
-
-      {quickAddNotice && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] z-30 mx-auto max-w-[448px] px-4"
-        >
-          <div className="rounded-xl border border-border-subtle bg-elevated px-4 py-3 text-[14px] text-text-primary">
-            {tNav("quickAddComingSoon")}
-          </div>
-        </div>
-      )}
 
       <nav
         aria-label={tNav("primaryNav")}
