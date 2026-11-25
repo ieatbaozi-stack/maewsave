@@ -2,7 +2,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 import { buildContentSecurityPolicy, getSecurityHeaders } from "@/lib/security-headers";
 
-const PUBLIC_PAGE_PATHS = new Set(["/sign-in", "/auth/complete"]);
+const PUBLIC_PAGE_PATHS = new Set(["/sign-in"]);
 const PUBLIC_EXACT_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -24,8 +24,22 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
+function isAdminPath(pathname: string): boolean {
+  return (
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/") ||
+    pathname === "/api/admin" ||
+    pathname.startsWith("/api/admin/")
+  );
+}
+
 function isPublicPath(pathname: string): boolean {
-  if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
+  if (
+    pathname === "/api/auth" ||
+    pathname.startsWith("/api/auth/") ||
+    pathname === "/api/invite/check" ||
+    pathname === "/api/cron/cleanup-auth"
+  ) {
     return true;
   }
   if (PUBLIC_PAGE_PATHS.has(pathname) || PUBLIC_EXACT_ASSETS.has(pathname)) {
@@ -57,6 +71,27 @@ export function proxy(request: NextRequest): NextResponse {
     const sessionCookie = getSessionCookie(request);
 
     if (!sessionCookie) {
+      // Admin endpoints/routes ALWAYS conceal existence with 404 (never 401/302)
+      if (isAdminPath(pathname)) {
+        if (pathname.startsWith("/api/")) {
+          const notFoundJson = NextResponse.json(
+            { error: "Not Found" },
+            {
+              status: 404,
+              headers: { "Cache-Control": "no-store, private" },
+            },
+          );
+          return applySecurityHeaders(notFoundJson, { isDev, nonce });
+        }
+        // Let /admin/* page route run requireSuperAdminPageOrNotFound() -> HTTP 404
+        const requestHeaders = new Headers(request.headers);
+        requestHeaders.set("x-nonce", nonce);
+        requestHeaders.set("Content-Security-Policy", csp);
+        const adminPageResponse = NextResponse.next({ request: { headers: requestHeaders } });
+        adminPageResponse.headers.set("Cache-Control", "no-store, private");
+        return applySecurityHeaders(adminPageResponse, { isDev, nonce });
+      }
+
       if (pathname === "/api" || pathname.startsWith("/api/")) {
         const unauthorizedResponse = NextResponse.json(
           { error: "Unauthorized" },
@@ -83,6 +118,10 @@ export function proxy(request: NextRequest): NextResponse {
       headers: requestHeaders,
     },
   });
+
+  if (isAdminPath(pathname)) {
+    response.headers.set("Cache-Control", "no-store, private");
+  }
 
   return applySecurityHeaders(response, { isDev, nonce });
 }

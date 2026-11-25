@@ -9,7 +9,7 @@
 **Goal:** วางโครงสร้าง Repo, ระบบ Better Auth ที่ล็อกคนเดียว, Design System (Dark/Light + TH/EN), iOS PWA Shell และ CI/CD Pipeline
 - [ ] Init Next.js (App Router, Strict TS, Tailwind) + Drizzle ORM + Neon PostgreSQL (ไม่เขียนทับ `docs/`, `AGENTS.md`, `.github/`, `public/`)
 - [ ] สร้าง Database Schema ทั้งหมดตาม `docs/ARCHITECTURE.md` + ตาราง Better Auth และรัน Initial Migration
-- [ ] ตั้งค่า **Better Auth (`better-auth`)** + `drizzleAdapter` + Google OAuth + `databaseHooks` ล็อก `ALLOWED_USER_EMAIL` + Middleware Protection
+- [ ] ตั้งค่า **Better Auth (`better-auth`)** + `drizzleAdapter` + Google OAuth (`select_account`, ไม่เก็บ token) + Email OTP 6 หลัก (Decoupled SMTP/Log Transport) + Invite-only Atomic Gate + Super Admin (`/admin/invites`) + DB Rate Limiting + Middleware Protection
 - [ ] ตั้งค่า Design Tokens (`docs/DESIGN.md`), ฟอนต์ `Inter` + `Anuphan`, `next-themes` (Dark/Light/System) และ `next-intl` (`messages/th.json`, `messages/en.json`)
 - [ ] ตั้งค่า Security Headers (`CSP`, `HSTS`, `X-Frame-Options`, `nosniff`) ใน `next.config.ts`
 - [ ] ตั้งค่า iOS PWA (`manifest.json`, Export `public/icon.svg` เป็น `apple-touch-icon.png` 180x180 & `icon-512.png`, `viewport-fit=cover`, Safe Area CSS, Dynamic `theme-color`)
