@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "categories_user_type_name_uidx" ON "categories" USING btree ("user_id","type",lower(btrim("name")));

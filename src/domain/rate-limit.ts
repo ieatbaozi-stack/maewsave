@@ -14,6 +14,9 @@ export const RATE_LIMIT_RULES = {
   OTP_REQUEST_EMAIL_HOURLY: { scope: "otp:hr:email", max: 5, windowSec: 3600 },
   OTP_REQUEST_EMAIL_DAILY: { scope: "otp:day:email", max: 10, windowSec: 86400 },
   ADMIN_CREATE_INVITE_DAILY: { scope: "admin:inv:day", max: 20, windowSec: 86400 },
+  FINANCE_MUTATION_USER_1M: { scope: "fin:mut:u:1m", max: 60, windowSec: 60 },
+  FINANCE_OVERVIEW_USER_1M: { scope: "fin:ov:u:1m", max: 30, windowSec: 60 },
+  CATEGORY_SEED_USER_1H: { scope: "cat:seed:u:1h", max: 5, windowSec: 3600 },
 } as const satisfies Record<string, RateLimitRule>;
 
 export function hashRateLimitSubject(subject: string): string {
